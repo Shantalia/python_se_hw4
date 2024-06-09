@@ -64,9 +64,23 @@ class GoitFramework(BaseHTTPRequestHandler):
 def save_data_from_form(data):
     parse_data = urllib.parse.unquote_plus(data.decode())
     try:
-        parse_dict = {str(datetime.now()): {key: value for key, value in [el.split('=') for el in parse_data.split('&')]}}
-        with open('storage/data.json', 'a', encoding='utf-8') as file:
-            json.dump(parse_dict, file, ensure_ascii=False, indent=4)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        new_data = {current_time: {key: value for key, value in [el.split('=') for el in parse_data.split('&')]}}
+        file_path = 'storage/data.json'
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                existing_data = json.load(file)
+        except FileNotFoundError:
+            existing_data = {}
+        except ValueError:
+            existing_data = {}
+
+        existing_data.update(new_data)
+
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(existing_data, file, ensure_ascii=False, indent=2)
+
     except ValueError as err:
         logging.error(err)
     except OSError as err:
